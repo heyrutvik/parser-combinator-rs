@@ -1,0 +1,8 @@
+[package]
+name = "parser-combinator-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+staticparse = { path = "staticparse" }
+dynamicparse = { path = "dynamicparse" }
