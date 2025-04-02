@@ -165,3 +165,71 @@ fn ws() -> impl Parser<()> + Clone {
         .many()
         .skip()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::json::json_static_dispatch::*;
+    use staticparse::Parser;
+
+    #[test]
+    fn test_parse_ws() {
+        let s = " \n\r\thello";
+        let (_, r) = ws().parse(s).unwrap();
+        assert_eq!("hello", r);
+    }
+
+    #[test]
+    fn test_parse_number() {
+        let s = "1";
+        let (v, _) = number().parse(s).unwrap();
+        assert_eq!(1_f64, v);
+        let s = "1.2";
+        let (v, _) = number().parse(s).unwrap();
+        assert_eq!(1.2_f64, v);
+        let s = "1.234E-567";
+        let (v, _) = number().parse(s).unwrap();
+        assert_eq!(1.234E-567_f64, v);
+    }
+
+    #[test]
+    fn test_parse_string() {
+        let s = "\"hello\"1";
+        let (v, r) = string().parse(s).unwrap();
+        assert_eq!("hello", v.as_str());
+        assert_eq!("1", r);
+    }
+
+    #[test]
+    fn test_parse_bool() {
+        let s = "true";
+        let (v, _) = boolean().parse(s).unwrap();
+        assert_eq!(true, v);
+        let s = "false";
+        let (v, _) = boolean().parse(s).unwrap();
+        assert_eq!(false, v);
+    }
+
+    #[test]
+    fn test_parse_array() {
+        let s = "[1, [\"a\", false], null]";
+        let (vs, _) = array().parse(s).unwrap();
+        assert_eq!(Json::Number(1_f64), vs[0]);
+        assert_eq!(
+            Json::Array(vec![Json::String("a".to_string()), Json::Bool(false)]),
+            vs[1]
+        );
+        assert_eq!(Json::Null, vs[2]);
+    }
+
+    #[test]
+    fn test_parse_object() {
+        let s = "{\"a\": true}";
+        let (obj, _) = object().parse(s).unwrap();
+        let expected = {
+            let mut m = HashMap::new();
+            m.insert("a".to_string(), Json::Bool(true));
+            m
+        };
+        assert_eq!(expected, obj);
+    }
+}
